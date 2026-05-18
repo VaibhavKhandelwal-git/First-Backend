@@ -1,7 +1,7 @@
 import asyncHandler from "../utils/asyncHandler.js";
 import apiError from "../utils/apiError.js";
 import User from "../models/user.model.js";
-import { uploadToCloudinary } from "../utils/cloudinary.js";
+import uploadToCloudinary from "../utils/cloudinary.js";
 import upload from "../middlewares/multer.middleware.js";
 import apiResponse from "../utils/api.Response.js";
 const registerUser = asyncHandler(async (req,res,next) => {
@@ -29,8 +29,8 @@ const registerUser = asyncHandler(async (req,res,next) => {
         throw new apiError(409, "User with email or username already exists");
     }
 
-    const avatarLocalPath = req.files?.avatar[0]?.path;
-    const coverLocalPath = req.files?.cover[0]?.path;
+    const avatarLocalPath = req.files?.avatar?.[0]?.path;
+    const coverLocalPath = req.files?.coverImage?.[0]?.path;
 
     if(!avatarLocalPath){
         throw new apiError(400, "Avatar image is required");
