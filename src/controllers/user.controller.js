@@ -4,6 +4,7 @@ import User from "../models/user.model.js";
 import uploadToCloudinary from "../utils/cloudinary.js";
 import upload from "../middlewares/multer.middleware.js";
 import apiResponse from "../utils/api.Response.js";
+import jwt from "jsonwebtoken";
 
 const generateAccessAndRefreshToken = async(userId) =>
 {
@@ -136,7 +137,7 @@ const loginUSer = asyncHandler(async (req,res,next) => {
 })
 
 const logoutUser = asyncHandler(async(req,res) =>{
-    await User.findByIdAndUpdate(req.user.id,
+    await User.findByIdAndUpdate(req.user._id,
         {
             $set:{refreshToken: null}
         },
@@ -159,4 +160,48 @@ const logoutUser = asyncHandler(async(req,res) =>{
 
 })
 
-export {registerUser, loginUSer, logoutUser}
+const refreshAccessToken = asyncHandler(async(req,res) =>{
+    
+    const incomingRefreshToken = req.cookies.refreshToken || req.body.refreshToken
+    
+    if(!incomingRefreshToken){
+        throw new apiError(401,"Unauthorized request")
+    }
+    
+    try{
+        const decodedToken = jwt.verify(incomingRefreshToken, REFRESH_TOKEN_SECRET)
+        
+        const user= await User.findById(decodedToken._id)
+
+        if(!user){
+            throw new apiError(401,"Invalid Refresh Token")
+        }
+
+        if(user.refreshToken !== incomingRefreshToken){
+            throw new apiError(401,"Refresh Token is Expired or Used")
+        }
+
+        const options ={
+            httpOnly:true,
+            secure:true
+        }
+        const {accessToken, newRefreshToken} = await generateAccessAndRefreshToken(user._id);
+
+        return res
+        .status(200)
+        .cookie("accessToken", accessToken, options)
+        .cookie("refreshToken", newRefreshToken, options)
+        .json(
+            new apiResponse(200,
+                {accessToken, newRefreshToken},
+                "Access token refreshed successfully"
+            )
+        )
+    }
+    catch(err) {
+        throw new apiError(401,"Invalid Refresh Token")
+    }
+
+})
+
+export {registerUser, loginUSer, logoutUser, refreshAccessToken}
