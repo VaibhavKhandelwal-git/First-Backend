@@ -108,7 +108,7 @@ const loginUSer = asyncHandler(async (req,res,next) => {
 
     const isPasswordValid= await user.isPasswordCorrect(password);
 
-    if(!isPasswordalid){
+    if(!isPasswordValid){
         throw new apiError(401,"Invalid User Credentials")
     }
 
@@ -169,7 +169,7 @@ const refreshAccessToken = asyncHandler(async(req,res) =>{
     }
     
     try{
-        const decodedToken = jwt.verify(incomingRefreshToken, REFRESH_TOKEN_SECRET)
+        const decodedToken = jwt.verify(incomingRefreshToken, process.env.REFRESH_TOKEN_SECRET)
         
         const user= await User.findById(decodedToken._id)
 
@@ -185,15 +185,15 @@ const refreshAccessToken = asyncHandler(async(req,res) =>{
             httpOnly:true,
             secure:true
         }
-        const {accessToken, refreshToken: newRefreshToken} = await generateAccessAndRefreshToken(user._id);
+        const {accessToken, refreshToken} = await generateAccessAndRefreshToken(user._id);
 
         return res
         .status(200)
         .cookie("accessToken", accessToken, options)
-        .cookie("refreshToken", newRefreshToken, options)
+        .cookie("refreshToken", refreshToken, options)
         .json(
             new apiResponse(200,
-                {accessToken, newRefreshToken},
+                {accessToken, refreshToken},
                 "Access token refreshed successfully"
             )
         )
@@ -226,7 +226,7 @@ const changeCurrentPassword = asyncHandler(async(req,res) =>{
 
     user.password = newpassword;
     
-    await user.save(validateBeforeSave=false);
+    await user.save({validateBeforeSave=false});
 
     return res
     .status(200)
@@ -283,7 +283,7 @@ const updateAvatar = asyncHandler(async(req,res)=>{
     
     const avatar = await uploadToCloudinary(avatarLocalPath)
 
-    if (!avatar.url){
+    if (!avatar?.url){
         throw new apiError(400,"Error while uploading avatar image")
     }
 
@@ -315,11 +315,11 @@ const updateCoverImage = asyncHandler(async(req,res)=>{
     
     const coverImage = await uploadToCloudinary(coverImageLocalPath)
 
-    if (!coverImage.url){
+    if (!coverImage?.url){
         throw new apiError(400,"Error while uploading cover image")
     }
 
-    await User.findByIdAndUpdate(
+    const user = await User.findByIdAndUpdate(
         req.user?.id,
         {
             $set:{coverImage: coverImage.url}
