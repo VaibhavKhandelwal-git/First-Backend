@@ -1,8 +1,5 @@
 import mongoose,{Schema} from 'mongoose';
-import User from './user.model.js';
 import mongooseAggregatePaginate from "mongoose-aggregate-paginate-v2";
-import jwt from 'jsonwebtoken';
-import bcrypt from 'bcrypt';
 
 const videoSchema=new Schema(
     {

@@ -5,6 +5,7 @@ import uploadToCloudinary from "../utils/cloudinary.js";
 import upload from "../middlewares/multer.middleware.js";
 import apiResponse from "../utils/api.Response.js";
 import jwt from "jsonwebtoken";
+import mongoose from "mongoose";
 
 const generateAccessAndRefreshToken = async(userId) =>
 {
@@ -226,7 +227,7 @@ const changeCurrentPassword = asyncHandler(async(req,res) =>{
 
     user.password = newpassword;
     
-    await user.save({validateBeforeSave=false});
+    await user.save({validateBeforeSave: false});
 
     return res
     .status(200)
@@ -287,7 +288,7 @@ const updateAvatar = asyncHandler(async(req,res)=>{
         throw new apiError(400,"Error while uploading avatar image")
     }
 
-    await User.findByIdAndUpdate(
+    const user = await User.findByIdAndUpdate(
         req.user?.id,
         {
             $set:{avatar: avatar.url}
@@ -420,7 +421,7 @@ const getWatchHistory = asyncHandler(async(req,res)=>{
         {
             $lookup:{
                 from:"videos",
-                localFeild:"watchHistory",
+                localField:"watchHistory",
                 foreignField:"_id",
                 as:"watchHistory",
                 pipeline:[
@@ -432,7 +433,7 @@ const getWatchHistory = asyncHandler(async(req,res)=>{
                             as:"owner",
                             pipeline:[
                                 {
-                                    project:{
+                                    $project:{
                                         username:1,
                                         fullName:1,
                                         avatar:1
