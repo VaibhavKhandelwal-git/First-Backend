@@ -341,13 +341,16 @@ const updateCoverImage = asyncHandler(async(req,res)=>{
 
 
 const getUserChannelProfile = asyncHandler(async(req,res) =>{
-    const {username} = req.params;
+
+    const { username } = req.params;
 
     if(!username?.trim()){
         throw new apiError(400,"Username is required")
     }
 
-    const channel=await User.aggregate([
+    const loggedInUserId = req.user?._id || null;
+
+    const channel = await User.aggregate([
         {
             $match:{
                 username: username?.toLowerCase()
@@ -359,7 +362,6 @@ const getUserChannelProfile = asyncHandler(async(req,res) =>{
                 localField:"_id",
                 foreignField:"channel",
                 as:"subscribers"
-
             }
         },
         {
@@ -368,24 +370,25 @@ const getUserChannelProfile = asyncHandler(async(req,res) =>{
                 localField:"_id",
                 foreignField:"subscriber",
                 as:"subscribedTo"
-
             }
         },
         {
             $addFields:{
-                subscribersCount:{$size:"$subscribers"},
-                subscribedToCount:{$size:"$subscribedTo"},
-                isSubscribed: {
-                    $cond:{
-                        if:{
-                            $in:[req.user?._id, "$subscribers.subscriber"]
-                        },
-                        then:true,
-                        else:false
+                subscribersCount:{
+                    $size:"$subscribers"
+                },
+                subscribedToCount:{
+                    $size:"$subscribedTo"
+                },
+                isSubscribed: loggedInUserId
+                    ? {
+                        $in:[
+                            new mongoose.Types.ObjectId(loggedInUserId),
+                            "$subscribers.subscriber"
+                        ]
                     }
-                }
+                    : false
             }
-            
         },
         {
             $project:{
@@ -397,9 +400,9 @@ const getUserChannelProfile = asyncHandler(async(req,res) =>{
                 subscribedToCount:1,
                 isSubscribed:1
             }
-        },
-        
-    ])
+        }
+    ]);
+
     if(!channel?.length){
         throw new apiError(404,"Channel not found")
     }
@@ -407,7 +410,11 @@ const getUserChannelProfile = asyncHandler(async(req,res) =>{
     return res
     .status(200)
     .json(
-        new apiResponse(200, channel[0], "Channel profile fetched successfully")
+        new apiResponse(
+            200,
+            channel[0],
+            "Channel profile fetched successfully"
+        )
     )
 })
 

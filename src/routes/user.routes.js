@@ -4,6 +4,7 @@ import { registerUser, loginUSer, logoutUser, refreshAccessToken,
     updateCoverImage, updateAvatar, getUserChannelProfile, getWatchHistory } from "../controllers/user.controller.js";
 import upload from "../middlewares/multer.middleware.js";
 import { verifyJWT } from "../middlewares/auth.middleware.js";
+import { optJWT } from "../middlewares/optionalAuth.middleware.js";
 
 const router=Router();
 
@@ -40,7 +41,7 @@ router.route("/update-cover").patch(verifyJWT,upload.single("coverImage"),update
 
 router.route("/update-avatar").patch(verifyJWT,upload.single("avatar"),updateAvatar)
 
-router.route("/channel/:username").get(getUserChannelProfile)
+router.route("/channel/:username").get(optJWT,getUserChannelProfile)
 
 
 export default router;

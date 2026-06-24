@@ -2,7 +2,7 @@ import mongoose,{Schema} from 'mongoose';
 import User from './user.model.js';
 import Video from './video.model.js';
 import Comment from './comment.model.js';
-import tweet from './tweet.model.js';
+import Tweet from './tweet.model.js';
 
 const likeSchema=new Schema(
     {

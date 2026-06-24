@@ -139,7 +139,7 @@ const getVideoComments = asyncHandler(async (req, res) => {
     const comments = await Comment.aggregate(pipeline)
 
     return res.status(200).
-    json(new apiResponse(200,comments,"Comments fetched successfully"))
+    json(new apiResponse(200,comments,"Comments fetched"))
 
 
 })
@@ -203,7 +203,7 @@ const addComment = asyncHandler(async (req, res) => {
 
     return res.
     status(201).json(
-    new apiResponse(201,comment,"Comment Published Successfully"))
+    new apiResponse(201,comment,"Comment added"))
 
 })
 
@@ -268,7 +268,7 @@ const updateComment = asyncHandler(async (req, res) => {
     }
 
     return res.status(200).
-    json(new apiResponse(200,updatedComment,"Comment Updated"))
+    json(new apiResponse(200,updatedComment,"Comment updated"))
 })
 
 const deleteComment = asyncHandler(async (req, res) => {
@@ -307,7 +307,7 @@ const deleteComment = asyncHandler(async (req, res) => {
 
     return res.
     status(200).
-    json(new apiResponse(200,{},"Comment Deleted Successfully"))
+    json(new apiResponse(200,{},"Comment deleted"))
 
 })
 

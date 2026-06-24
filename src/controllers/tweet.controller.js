@@ -1,10 +1,9 @@
 import mongoose, { isValidObjectId } from "mongoose"
-import {Tweet} from "../models/tweet.model.js"
-import {User} from "../models/user.model.js"
-import apiError, {ApiError} from "../utils/ApiError.js"
-import {ApiResponse} from "../utils/ApiResponse.js"
-import {asyncHandler} from "../utils/asyncHandler.js"
+import Tweet from "../models/tweet.model.js"
+import User from "../models/user.model.js"
+import apiError from "../utils/apiError.js"
 import apiResponse from "../utils/api.Response.js"
+import asyncHandler from "../utils/asyncHandler.js"
 
 const createTweet = asyncHandler(async (req, res) => {
     
@@ -30,27 +29,31 @@ const createTweet = asyncHandler(async (req, res) => {
     }
 
     return res.status(201).
-    json(new apiResponse(201,tweet,"Tweet Crtead Successfully"))
+    json(new apiResponse(201,tweet,"Tweet created"))
 
     
 })
 
 const getUserTweets = asyncHandler(async (req, res) => {
     
-    const{_id}=req.user
+    const{userId}=req.params
 
-    if(!_id){
-        throw new apiError(400,"User Must be LoggedIn")
+    if(!userId){
+        throw new apiError(400,"User Id is Required")
     }
 
-    const tweets = await Tweet.find({owner: _id}).sort({createdAt: -1});
+    if(!isValidObjectId(userId)){
+        throw new apiError(400,"Invalid User Id")
+    }
+
+    const tweets = await Tweet.find({owner: userId}).sort({createdAt: -1});
 
     if(!tweets){
         throw new apiError(500,"Couldn't Fetch User Tweets")
     }
 
     return res.status(200)
-    .json(new apiResponse(200,tweets,"User Tweets Fetched Successfully"))
+    .json(new apiResponse(200,tweets,"Tweets fetched"))
 
 })
 
@@ -104,7 +107,7 @@ const updateTweet = asyncHandler(async (req, res) => {
     }
 
     return res.status(200).
-    json(new apiResponse(200,updatedTweet,"Tweet Updated"))
+    json(new apiResponse(200,updatedTweet,"Tweet updated"))
 
 })
 
@@ -139,7 +142,7 @@ const deleteTweet = asyncHandler(async (req, res) => {
     await Tweet.findByIdAndDelete(tweetId)
 
     return res.status(200).
-    json(new apiResponse(200,{},"Tweet Deleted Successfully"))
+    json(new apiResponse(200,{},"Tweet deleted"))
 
 })
 
