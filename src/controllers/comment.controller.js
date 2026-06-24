@@ -7,6 +7,26 @@ import asyncHandler from "../utils/asyncHandler.js"
 
 const getVideoComments = asyncHandler(async (req, res) => {
 
+    // 1. Get videoId from URL params
+
+    // 2. Get pagination values from query
+
+    // 3. Validate videoId
+
+    // 4. Verify target video exists
+
+    // 5. Convert page and limit into numbers
+
+    // 6. Build aggregation pipeline
+
+    // 7. If user is logged in,
+    //    add personalized fields
+    //    (isOwner and isLiked)
+
+    // 8. Execute aggregation
+
+    // 9. Return comments response
+
     const {videoId} = req.params
     
     const {page = 1, limit = 10} = req.query
@@ -126,6 +146,27 @@ const getVideoComments = asyncHandler(async (req, res) => {
 
 const addComment = asyncHandler(async (req, res) => {
     
+    // 1. Get videoId from URL params
+
+    // 2. Validate videoId exists
+
+    // 3. Check if the video actually exists
+
+    // 4. Get comment content from request body
+
+    // 5. Validate comment content is not empty
+
+    // 6. Get logged-in user's id from req.user
+
+    // 7. Create comment document
+    //    - content -> comment text
+    //    - owner -> current user
+    //    - video -> target video
+
+    // 8. Ensure comment was created successfully
+
+    // 9. Return created comment
+
     const {videoId}=req.params
     
     if(!videoId){
@@ -168,6 +209,26 @@ const addComment = asyncHandler(async (req, res) => {
 
 const updateComment = asyncHandler(async (req, res) => {
     
+    // 1. Get commentId from URL params
+
+    // 2. Validate commentId exists
+
+    // 3. Get updated content from request body
+
+    // 4. Validate content is not empty
+
+    // 5. Find comment in database
+
+    // 6. Ensure comment exists
+
+    // 7. Verify current user owns this comment
+
+    // 8. Update comment content
+
+    // 9. Ensure update succeeded
+
+    // 10. Return updated comment
+
     const {commentId}=req.params
 
     if(!commentId){
@@ -212,6 +273,20 @@ const updateComment = asyncHandler(async (req, res) => {
 
 const deleteComment = asyncHandler(async (req, res) => {
     
+    // 1. Get commentId from URL params
+
+    // 2. Validate commentId exists
+
+    // 3. Find comment in database
+
+    // 4. Ensure comment exists
+
+    // 5. Verify current user owns this comment
+
+    // 6. Delete comment
+
+    // 7. Return success response
+
     const { commentId } = req.params
 
     if(!commentId){
