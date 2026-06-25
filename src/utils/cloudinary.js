@@ -4,7 +4,7 @@ import fs from 'fs';
 cloudinary.config({ 
     cloud_name: process.env.CLOUDINARY_CLOUD_NAME, 
     api_key: process.env.CLOUDINARY_API_KEY, 
-    api_secret: process.env.CLOUDINARY_API_SECRET // Click 'View API Keys' above to copy your API secret
+    api_secret: process.env.CLOUDINARY_API_SECRET
 });
 
 const uploadToCloudinary=async (localfilepath)=>{
@@ -25,4 +25,20 @@ const uploadToCloudinary=async (localfilepath)=>{
     }
     
 };  
+const deleteFromCloudinary=async (publicId, resource_type="image")=>{
+    try
+    {
+        if(!publicId) return null;
+        const response=await cloudinary.uploader.destroy(publicId,{
+            resource_type
+        })
+        return response;
+    }
+    catch(error)
+    {
+        return null;
+    }
+}
+
+export {deleteFromCloudinary};
 export default uploadToCloudinary;

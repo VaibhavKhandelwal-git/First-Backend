@@ -1,7 +1,7 @@
 import asyncHandler from "../utils/asyncHandler.js";
 import apiError from "../utils/apiError.js";
 import User from "../models/user.model.js";
-import uploadToCloudinary from "../utils/cloudinary.js";
+import uploadToCloudinary, {deleteFromCloudinary} from "../utils/cloudinary.js";
 import upload from "../middlewares/multer.middleware.js";
 import apiResponse from "../utils/api.Response.js";
 import jwt from "jsonwebtoken";
@@ -66,7 +66,9 @@ const registerUser = asyncHandler(async (req,res,next) => {
     const user = await User.create({
         fullName,
         avatar: avatar.url,
+        avatarPublicId: avatar.public_id,
         coverImage: coverImage?.url || null,
+        coverImagePublicId: coverImage?.public_id || null,
         email,
         username: username.toLowerCase(),
         password
@@ -288,10 +290,16 @@ const updateAvatar = asyncHandler(async(req,res)=>{
         throw new apiError(400,"Error while uploading avatar image")
     }
 
+    // TODO: delete old avatar from cloudinary using req.user.avatarPublicId
+    await deleteFromCloudinary(req.user.avatarPublicId)
+
     const user = await User.findByIdAndUpdate(
         req.user?.id,
         {
-            $set:{avatar: avatar.url}
+            $set:{
+                avatar: avatar.url,
+                avatarPublicId: avatar.public_id
+            }
         },
         {
             new:true    
@@ -320,10 +328,16 @@ const updateCoverImage = asyncHandler(async(req,res)=>{
         throw new apiError(400,"Error while uploading cover image")
     }
 
+    // TODO: delete old cover image from cloudinary using req.user.coverImagePublicId
+    await deleteFromCloudinary(req.user.coverImagePublicId)
+
     const user = await User.findByIdAndUpdate(
         req.user?.id,
         {
-            $set:{coverImage: coverImage.url}
+            $set:{
+                coverImage: coverImage.url,
+                coverImagePublicId: coverImage.public_id
+            }
         },
         {
             new:true    
