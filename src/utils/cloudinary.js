@@ -10,7 +10,7 @@ cloudinary.config({
 const uploadToCloudinary=async (localfilepath)=>{
     try
     {
-        if(!localfilepath) throw new Error(400,"File path is required for upload");
+        if(!localfilepath) return null;
         const response=await cloudinary.uploader.upload(localfilepath,{
             resource_type:"auto",
         })

@@ -2,7 +2,6 @@ import asyncHandler from "../utils/asyncHandler.js";
 import apiError from "../utils/apiError.js";
 import User from "../models/user.model.js";
 import uploadToCloudinary, {deleteFromCloudinary} from "../utils/cloudinary.js";
-import upload from "../middlewares/multer.middleware.js";
 import apiResponse from "../utils/api.Response.js";
 import jwt from "jsonwebtoken";
 import mongoose from "mongoose";
@@ -294,7 +293,7 @@ const updateAvatar = asyncHandler(async(req,res)=>{
     await deleteFromCloudinary(req.user.avatarPublicId)
 
     const user = await User.findByIdAndUpdate(
-        req.user?.id,
+        req.user?._id,
         {
             $set:{
                 avatar: avatar.url,
@@ -332,7 +331,7 @@ const updateCoverImage = asyncHandler(async(req,res)=>{
     await deleteFromCloudinary(req.user.coverImagePublicId)
 
     const user = await User.findByIdAndUpdate(
-        req.user?.id,
+        req.user?._id,
         {
             $set:{
                 coverImage: coverImage.url,
