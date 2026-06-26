@@ -8,8 +8,135 @@ import uploadToCloudinary, {deleteFromCloudinary} from "../utils/cloudinary.js"
 
 
 const getAllVideos = asyncHandler(async (req, res) => {
+    
     const { page = 1, limit = 10, query, sortBy, sortType, userId } = req.query
-    //TODO: get all videos based on query, sort, pagination
+    
+    if(!userId){
+        throw new apiError(400,"User Id is Required")
+    }
+
+    if(!isValidObjectId(userId)){
+        throw new apiError(400,"Invalid User Id")
+    }
+    
+    const user = await User.findById(userId)
+
+    if(!user){
+        throw new apiError(404,"User Not Found")
+    }
+
+    const matchStage = {
+        owner: new mongoose.Types.ObjectId(userId)
+    }
+
+    if(req.user?._id?.toString() !== userId){
+        matchStage.isPublished = true
+    }
+
+    let sort = {
+    createdAt: -1
+}
+
+    if(sortBy === "views"){
+        sort = {
+            views: -1
+        }
+    }
+
+    if(sortBy === "createdAt"){
+
+        if(sortType === "asc"){
+            sort = {
+                createdAt: 1
+            }
+        }
+        else{
+            sort = {
+                createdAt: -1
+            }
+        }
+
+    }
+
+    const userVideos =await Video.aggregate([
+        {
+            $match: matchStage
+        },
+        {
+            $lookup:{
+                from:"subscriptions",
+                foreignField:"channel",
+                localField:"owner",
+                as:"subscribers",
+            }
+        },
+        {
+            $addFields:{
+                subscribersCount:{
+                    $size:"$subscribers"
+                },
+                isSubscribed: req.user?._id
+                ?{
+                    $in:[req.user._id,"$subscribers.subscriber"]
+                }
+                :false
+            }
+        },
+        {
+            $lookup:{
+                from:"users",
+                foreignField:"_id",
+                localField:"owner",
+                as:"owner",
+                pipeline:[
+                    {
+                        $project:{
+                            username:1,
+                            avatar:1,
+                        }
+                    }
+                ]
+            }
+        },
+        {
+            $addFields:{
+                owner:{
+                    $first: "$owner"
+                }
+            }
+        },
+        {
+            $sort: sort
+        },
+        {
+            $skip: (Number(page) - 1) * Number(limit)
+        },
+        {
+            $limit: Number(limit)
+        },
+        
+        {
+            $project:{
+                videoFile:1,
+                thumbnail:1,
+                title:1,
+                views:1,
+                createdAt:1,
+                owner:1,
+                subscribersCount:1,
+                isSubscribed:1,
+            }
+        }
+        
+    ])
+
+    if(!userVideos.length){
+        throw new apiError(404,"No Videos Found")
+    }
+
+    return res.status(200).json(new apiResponse(200,userVideos,"Video Fetched Successfully"))
+
+
 })
 
 const publishAVideo = asyncHandler(async (req, res) => {
@@ -78,26 +205,6 @@ const getVideoById = asyncHandler(async (req, res) => {
 
     if(!isValidObjectId(videoId)){
         throw new apiError(400,"Invalid VideoId")
-    }
-
-    await Video.findByIdAndUpdate(
-        videoId,
-        {
-            $inc: {
-                views: 1
-            }
-        }
-    )
-
-    if(req.user?._id){
-        await User.findByIdAndUpdate(
-            req.user._id,
-            {
-                $addToSet:{
-                    watchHistory: videoId
-                }
-            }
-        )
     }
 
     const videoDetails = await Video.aggregate([
@@ -187,6 +294,7 @@ const getVideoById = asyncHandler(async (req, res) => {
                 description: 1,
                 duration: 1,
                 views: 1,
+                isPublished: 1,
                 createdAt: 1,
                 owner: 1,
                 likesCount: 1,
@@ -203,6 +311,26 @@ const getVideoById = asyncHandler(async (req, res) => {
 
     if(!videoDetails[0].isPublished && videoDetails[0].owner._id.toString() !== req.user?._id?.toString()){
         throw new apiError(403,"Video is not published")
+    }
+
+    await Video.findByIdAndUpdate(
+        videoId,
+        {
+            $inc: {
+                views: 1
+            }
+        }
+    )
+
+    if(req.user?._id){
+        await User.findByIdAndUpdate(
+            req.user._id,
+            {
+                $addToSet:{
+                    watchHistory: videoId
+                }
+            }
+        )
     }
 
     return res
